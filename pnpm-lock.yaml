@@ -14,6 +14,9 @@ importers:
       '@livekit/components-styles':
         specifier: ^1.1.6
         version: 1.1.6
+      '@worldcoin/minikit-js':
+        specifier: ^1.9.6
+        version: 1.9.6(@types/react@19.0.8)(react@19.0.0)(typescript@5.7.3)(viem@2.23.5(typescript@5.7.3))
       google-map-react:
         specifier: ^2.2.5
         version: 2.2.5(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
@@ -27,8 +30,8 @@ importers:
         specifier: ^15.5.4
         version: 15.5.4(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       next-world-auth:
-        specifier: 0.0.22
-        version: 0.0.22(@types/react@19.0.8)(typescript@5.7.3)(viem@2.23.5(typescript@5.7.3))
+        specifier: 0.0.24
+        version: 0.0.24(@types/react@19.0.8)(typescript@5.7.3)(viem@2.23.5(typescript@5.7.3))
       react:
         specifier: ^19.0.0
         version: 19.0.0
@@ -1385,8 +1388,8 @@ packages:
   natural-compare@1.4.0:
     resolution: {integrity: sha512-OWND8ei3VtNC9h7V60qff3SVobHr996CTwgxubgyQYEpg290h9J0buyECNNJexkFm5sOajh5G116RYA1c8ZMSw==}
 
-  next-world-auth@0.0.22:
-    resolution: {integrity: sha512-DC0Ijw6FLrRDOyezBk0vdevZ9Qpp04Ye98JXduWKqC42zF19cCNSQTLWnQVEtt5EeGdMK82oUTZiDOa/Zunt+A==}
+  next-world-auth@0.0.24:
+    resolution: {integrity: sha512-GDLXWNcegLKXtLa5J5Vh4SWM60rqVLkcLfmU7MG8x1mHhtAFVThXLtAeDWh0oUK4El5T2s7SYM4DTKn15Ej+sw==}
 
   next@15.5.4:
     resolution: {integrity: sha512-xH4Yjhb82sFYQfY3vbkJfgSDgXvBB6a8xPs9i35k6oZJRoQRihZH+4s9Yo2qsWpzBmZ3lPXaJ2KPXLfkvW4LnA==}
@@ -3438,7 +3441,7 @@ snapshots:
 
   natural-compare@1.4.0: {}
 
-  next-world-auth@0.0.22(@types/react@19.0.8)(typescript@5.7.3)(viem@2.23.5(typescript@5.7.3)):
+  next-world-auth@0.0.24(@types/react@19.0.8)(typescript@5.7.3)(viem@2.23.5(typescript@5.7.3)):
     dependencies:
       '@worldcoin/minikit-js': 1.9.6(@types/react@19.0.8)(react@19.0.0)(typescript@5.7.3)(viem@2.23.5(typescript@5.7.3))
       next: 15.5.4(react-dom@19.0.0(react@19.0.0))(react@19.0.0)

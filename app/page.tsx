@@ -4,6 +4,7 @@ import { useState } from "react"
 import Image from "next/image"
 import { Tokens } from 'next-world-auth'
 import { useWorldAuth } from 'next-world-auth/react'
+import { Permission } from '@worldcoin/minikit-js'
 import GoogleMapReact from 'google-map-react'
 
 // const AnyReactComponent = ({ text }: { text: string }) => <div>{text}</div>
@@ -11,8 +12,9 @@ import GoogleMapReact from 'google-map-react'
 const mapsApiKey: string = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!
 
 export default function Home() {
-  const { isLoading, isAuthenticated, session, signInWorldID, signInWallet, signOut, getLocation, pay } = useWorldAuth()
+  const { isLoading, isAuthenticated, session, signInWorldID, signInWallet, signOut, getLocation, pay, minikit } = useWorldAuth()
   const [tipAmount, setTipAmount] = useState<number | null>(null)
+  const [, setPermissions] = useState([])
 
   const tip = async (amount: number) => {
     const r = await pay({ amount, token: Tokens.WLD, recipient: '0x2Eb67DdFf6761bC0938e670bf1e1ed46110DDABb' })
@@ -21,13 +23,36 @@ export default function Home() {
     }
   }
 
+  const goWallet = async () => {
+    await signInWallet()
+    // @ts-expect-error - minikit instance from hook may not have commandsAsync property in type definition
+    const { finalPayload } = await minikit!.commandsAsync.getPermissions()
+    const permissions = finalPayload.permissions
+    setPermissions(permissions)
+    if(!permissions.microphone) {
+      // @ts-expect-error - minikit instance from hook may not have commandsAsync property in type definition
+      await minikit.commandsAsync.requestPermission({ permission: Permission.Microphone })
+    }
+    if(!permissions.Notifications) {
+      // @ts-expect-error - minikit instance from hook may not have commandsAsync property in type definition
+      await minikit.commandsAsync.requestPermission({ permission: Permission.Notifications })
+    }
+    // @ts-expect-error - minikit instance from hook may not have commandsAsync property in type definition
+    const { finalPayload: finalPayload1 } = await minikit!.commandsAsync.getPermissions()
+    const permissions1 = finalPayload1.permissions
+    setPermissions(permissions1)
+
+    // @ts-expect-error - minikit instance from hook may not have commandsAsync property in type definition
+    await minikit.commandsAsync.sendHapticFeedback({ hapticsType: 'notification', style: 'success' })
+  }
+
   const isInstalled = true
+
 
   return (<>
     <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 sm:p-20 font-[family-name:var(--font-geist-sans)] text-center">
       <main className="flex flex-col gap-1 row-start-2 items-center">
-        <div className="text-2xl font-bold">World Mini App Template</div>
-        <div>Template available on <a href="https://github.com/gip/worlddev/tree/main/next-mini-app" target="_blank" rel="noopener noreferrer" style={{ color: '#0070f3', fontStyle: 'italic', textDecoration: 'underline' }}>GitHub</a></div>
+        <div className="text-2xl font-bold">Terranova</div>
         {isLoading ? (
           <div className="flex items-center justify-center mt-4">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 dark:border-white"></div>
@@ -102,13 +127,6 @@ export default function Home() {
                     <div>Your unique app ID is available</div>
                     <div>Orb Verification Status: <span className="font-bold">{session.isOrbVerified ? 'verified ✓' : 'not verified ✗'}</span></div>
                   </>}
-                  {!session.isAuthenticatedWorldID && <button
-                    className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-                    onClick={() => signInWorldID({})}
-                  >
-                    Sign in with World ID
-                  </button>}
-                  <hr style={{ width: "100px", margin: 10 }} />
                   <div>
                   Your location is: {
                     session?.extra?.location
@@ -150,22 +168,12 @@ export default function Home() {
             ) : (
               <>
               <hr style={{ width: "100px", margin: 10 }} />
-                <div>A starter mini app in a few lines of code!</div>
-                <div>You are not authenticated - pick a method to sign in</div>
-                <hr style={{ width: "100px", margin: 10 }} />
                 <div className="flex gap-4 items-center flex-col sm:flex-row">
                   <button
                     className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-                    onClick={signInWallet}
+                    onClick={goWallet}
                   >
                     Login with World Wallet
-                  </button>
-                  <hr style={{ width: "100px", margin: 10 }} />
-                  <button
-                    className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-                    onClick={() => signInWorldID({})}
-                  >
-                    Login with World ID
                   </button>
                 </div>
               </>
