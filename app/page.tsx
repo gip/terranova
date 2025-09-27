@@ -2,7 +2,6 @@
 
 import { useState } from "react"
 import Image from "next/image"
-import { useRouter } from 'next/navigation'
 import { Tokens } from 'next-world-auth'
 import { useWorldAuth } from 'next-world-auth/react'
 import GoogleMapReact from 'google-map-react'
@@ -12,7 +11,6 @@ import GoogleMapReact from 'google-map-react'
 const mapsApiKey: string = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!
 
 export default function Home() {
-  const router = useRouter()
   const { isLoading, isAuthenticated, session, signInWorldID, signInWallet, signOut, getLocation, pay } = useWorldAuth()
   const [tipAmount, setTipAmount] = useState<number | null>(null)
 
