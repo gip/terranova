@@ -39,6 +39,9 @@ importers:
       '@eslint/eslintrc':
         specifier: ^3
         version: 3.2.0
+      '@types/google-map-react':
+        specifier: ^2.1.10
+        version: 2.1.10
       '@types/node':
         specifier: ^20
         version: 20.17.19
@@ -438,6 +441,9 @@ packages:
 
   '@types/estree@1.0.6':
     resolution: {integrity: sha512-AYnb1nQyY49te+VRAVgmzfcgjYS91mY5P0TKUDCLEM+gNnA+3T6rWITXRLYCpahpqSQbN5cE+gHpnPyXjHWxcw==}
+
+  '@types/google-map-react@2.1.10':
+    resolution: {integrity: sha512-8/0UllZS7tF08WNBRPQlSJCkETvz3e3sZoPxzDaWkj2iV5dmFSnOKXVtoeKo8dLZSe+RkLn479t1wj6nXmLLSA==}
 
   '@types/json-schema@7.0.15':
     resolution: {integrity: sha512-5+fP8P8MFNC+AyZCDxrB2pkZFPGzqQWUzpSeuuVLvm8VMcorNYavBqoFcxK8bQz4Qsbn4oUEEem4wDLfcysGHA==}
@@ -2284,6 +2290,10 @@ snapshots:
   '@types/dom-mediacapture-record@1.0.22': {}
 
   '@types/estree@1.0.6': {}
+
+  '@types/google-map-react@2.1.10':
+    dependencies:
+      '@types/react': 19.0.8
 
   '@types/json-schema@7.0.15': {}
 

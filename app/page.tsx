@@ -7,9 +7,9 @@ import { Tokens } from 'next-world-auth'
 import { useWorldAuth } from 'next-world-auth/react'
 import GoogleMapReact from 'google-map-react'
 
-const AnyReactComponent = ({ text }) => <div>{text}</div>
+// const AnyReactComponent = ({ text }: { text: string }) => <div>{text}</div>
 
-const mapsApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
+const mapsApiKey: string = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!
 
 export default function Home() {
   const router = useRouter()
@@ -129,14 +129,14 @@ export default function Home() {
                     <div style={{ height: '10vh', width: '100%' }}>
                       <GoogleMapReact
                         bootstrapURLKeys={{ key: mapsApiKey }}
-                        defaultCenter={{ lat: session.extra.location.latitude, lng: session.extra.location.longitude }}
+                        defaultCenter={{ lat: session.extra.location.latitude!, lng: session.extra.location.longitude! }}
                         defaultZoom={11}
                       >
-                        <AnyReactComponent
+                        {/* <AnyReactComponent
                           lat={session.extra.location.latitude}
                           lng={session.extra.location.longitude}
                           text="My Marker"
-                        />
+                        /> */}
                       </GoogleMapReact>
                     </div>}
                     <button
