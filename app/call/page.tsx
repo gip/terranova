@@ -8,7 +8,7 @@ import {
   RoomAudioRenderer,
   useTracks,
   RoomContext,
-} from '@livekit/components-react';
+} from '@livekit/components-react'
 import { Room, Track } from 'livekit-client'
 import '@livekit/components-styles'
 
@@ -61,7 +61,7 @@ export default function Page() {
 
   return (
     <RoomContext.Provider value={roomInstance}>
-      <div data-lk-theme="default" style={{ height: '100dvh' }}>
+      <div data-lk-theme="default" style={{ height: '50dvh' }}>
         {/* Your custom component with basic video conferencing functionality. */}
         <MyVideoConference />
         {/* The RoomAudioRenderer takes care of room-wide audio for you. */}
