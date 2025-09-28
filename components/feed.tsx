@@ -1,25 +1,29 @@
 import { Badge } from "@/components/ui/badge"
-import { MessageSquare, MoreHorizontal } from "lucide-react"
+import { MoreHorizontal } from "lucide-react"
 import { Request } from '@/lib/types'
 import { useState } from 'react'
 
-import { Button } from '@/components/ui/button'
-
-export const Feed = ({ posts }: { posts: Request[], setPost: (post: Request) => void }) => {
+export const Feed = ({ posts, setPost }: { posts: Request[], setPost: (post: Request | null) => void }) => {
   const [filter, setFilter] = useState<string>('Active')
 
   const statusMap = {
     'Active': 'open',
     'Yours': 'pending_payment',
     'Paid': 'paid',
-    'Rejected': 'rejected'
+    'Cancelled': 'cancelled'
   }
 
-  const initiateCall =async (id: string) => {
+  const initiateCall = async (id: string) => {
     const result = await fetch('/api/call', { method: 'POST', body: JSON.stringify({ id }) })
+    const json = await result.json()
     if(result.ok) {
-        window.location.href = `/call?id=${id}`
+        window.location.href = `/call?id=${json.id}`
     }
+  }
+
+  const remove = async (id: string) => {
+    await fetch('/api/request', { method: 'DELETE', body: JSON.stringify({ id })})
+    setPost(null)
   }
 
   const filteredPosts = posts.filter(post => 
@@ -29,7 +33,7 @@ export const Feed = ({ posts }: { posts: Request[], setPost: (post: Request) => 
   return (
     <div className="space-y-4">
       <div className="flex justify-center gap-3 px-4 mb-4 mt-4">
-        {['All', 'Active', 'Yours', 'Paid', 'Rejected'].map((status) => (
+        {['All', 'Active', 'Yours', 'Paid', 'Cancelled'].map((status) => (
           <Badge
             key={status}
             variant="secondary"
@@ -74,65 +78,49 @@ export const Feed = ({ posts }: { posts: Request[], setPost: (post: Request) => 
               </div>
               <p className="mt-1 text-[15px] whitespace-pre-wrap font-bold italic"></p>
               <p className="mt-4 text-[15px] whitespace-pre-wrap">{post.description}</p>
-              <div className="flex items-center gap-6 mt-3 text-[#6b7280]">
-                <button className="flex items-center gap-1.5">
-                  <MessageSquare className="w-[18px] h-[18px]" />
-                  <span className="text-sm"></span>
-                </button>
-                <button className="flex items-center gap-1.5">
-                  <span className="text-sm">0.1 WLD</span>
-                </button>
-                {/* <Badge 
-                  variant="secondary" 
-                  className={`bg-transparent border px-1.5 py-0 text-xs rounded-md ${post.status === 'open' ? 'border-green-500 text-green-500' : 
-                    post.status === 'pending_payment' ? 'border-yellow-500 text-yellow-500' : 
-                    post.status === 'paid' ? 'border-green-500 text-green-500' : 
-                    post.status === 'rejected' ? 'border-red-500 text-red-500' : ''}`}
-                >
-                  {post.status === 'open' ? 'Open' : 
-                    post.status === 'pending_payment' ? 'To Be Paid' : 
-                    post.status === 'paid' ? 'Paid' : 
-                    post.status === 'rejected' ? 'Rejected' : ''}
-                </Badge> */}
+              <div className="flex items-center justify-between mt-3 text-[#6b7280]">
+                <div className="flex items-center gap-6">
+                  {/* <button className="flex items-center gap-1.5">
+                    <MessageSquare className="w-[18px] h-[18px]" />
+                    <span className="text-sm"></span>
+                  </button>
+                  <button className="flex items-center gap-1.5">
+                    <span className="text-sm">0.1 WLD</span>
+                  </button> */}
+                  {/* <Badge 
+                    variant="secondary" 
+                    className={`bg-transparent border px-1.5 py-0 text-xs rounded-md ${post.status === 'open' ? 'border-green-500 text-green-500' : 
+                      post.status === 'pending_payment' ? 'border-yellow-500 text-yellow-500' : 
+                      post.status === 'paid' ? 'border-green-500 text-green-500' : 
+                      post.status === 'rejected' ? 'border-red-500 text-red-500' : ''}`}
+                  >
+                    {post.status === 'open' ? 'Open' : 
+                      post.status === 'pending_payment' ? 'To Be Paid' : 
+                      post.status === 'paid' ? 'Paid' : 
+                      post.status === 'rejected' ? 'Rejected' : ''}
+                  </Badge> */}
+                  {!post.requester_me && !post.requester_online &&
+                      <Badge className="relative" 
+                              variant="default"
+                              onClick={() => null}>Offline</Badge>}
+                  {post.requester_me && post.status === 'open' &&
+                    <Badge className="relative text-yellow-500" 
+                            variant="outline"
+                            onClick={() => remove(post.id)}>Cancel</Badge>}
+                  {post.requester_me && post.status === 'cancelled' &&
+                    <Badge className="relative text-green-500" 
+                            variant="outline"
+                            >Cancelled</Badge>}
+                </div>
                 {!post.requester_me && post.requester_online &&
-                    <Button className="relative border-green-500 text-white bg-gradient-to-r from-red-500 to-blue-500 bg-[length:200%_200%] animate-gradient" 
-                            size='sm' 
-                            variant="outline"
-                            onClick={() => initiateCall(post.id)}>Start Chat</Button>}
-                {!post.requester_me && !post.requester_online &&
-                    <Button className="relative" 
-                            size='sm' 
-                            variant="outline"
-                            onClick={() => null}>Offline</Button>}
+                      <Badge className="relative border-green-500 text-white bg-gradient-to-r from-red-500 to-blue-500 bg-[length:200%_200%] animate-gradient" 
+                              variant="secondary"
+                              onClick={() => initiateCall(post.id)}>Start Chat</Badge>}
               </div>
             </div>
           </div>
         </article>
       ))}
-
-    {/* <AlertDialog open={showModal} onOpenChange={setShowModal}>
-        <AlertDialogContent className="bg-black border-2 border-[#1c1c1f] max-w-[90%] rounded-xl">
-          <AlertDialogHeader className="space-y-3">
-            <AlertDialogTitle className={`text-2xl font-bold text-center ${
-              modalContent.accepted ? 'text-green-500' : 'text-red-500'
-            }`}>
-              {modalContent.accepted ? 'Answer Accepted' : 'Answer Not Accepted'}
-            </AlertDialogTitle>
-            <AlertDialogDescription className="text-lg text-center text-gray-300">
-              {modalContent.reason}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter className="sm:justify-center">
-            <AlertDialogAction 
-              onClick={handleModalClose}
-              className="text-xl rounded-full px-6 py-4 w-full sm:w-2/3 border-2 border-[#8b5cf6] bg-transparent hover:bg-[#8b5cf6]/20 transition-colors"
-            >
-              OK
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog> */}
-
 
     </div>
   )

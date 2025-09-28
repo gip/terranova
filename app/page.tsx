@@ -6,7 +6,7 @@ import { Permission } from '@worldcoin/minikit-js'
 // import GoogleMapReact from 'google-map-react'
 
 import { Button } from '@/components/ui/button'
-import { Home, Plus, MessageSquare } from "lucide-react"
+import { Home, Plus, PersonStanding } from "lucide-react"
 import { Feed } from '@/components/feed'
 import { Post } from '@/components/post'
 import {
@@ -27,13 +27,13 @@ const BottomNav = ({ tab, setTab }: { tab: string, setTab: (tab: string) => void
           onClick={() => setTab('home')} 
           className={`${tab === 'home' ? 'text-[#8b5cf6]' : 'text-gray-500'}`}
         >
-          <Home className="w-12 h-12" />
+          <PersonStanding className="w-12 h-12" />
         </button>
         <button 
           onClick={() => setTab('messages')} 
           className={`${tab === 'messages' ? 'text-[#8b5cf6]' : 'text-gray-500'}`}
         >
-          <MessageSquare className="w-10 h-10" />
+          <Home className="w-10 h-10" />
         </button>
         <button 
           onClick={() => setTab('post')} 
@@ -78,8 +78,8 @@ export default function Page() {
   }, [session])
 
   useEffect(() => {
-    if(!session || !session) {
-      setTab('home')
+    if(!session || !session.user) {
+      setTab('messages')
     }
   }, [session])
 
@@ -159,7 +159,7 @@ export default function Page() {
           </div>
         </>}
         {tab === 'post' && posts && <Post done={() => { fetchPosts(); setTab('messages') } } />}
-        {tab === 'messages' && <Feed posts={posts} setPost={() => { setTab('post') }} />}
+        {tab === 'messages' && <Feed posts={posts} setPost={() => fetchPosts()} />}
         {tab === 'home' && (
           <div className="flex flex-col items-center justify-center h-full mt-2">
             <h1 className="text-2xl italic py-6">Terranova</h1>

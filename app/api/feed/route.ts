@@ -26,7 +26,8 @@ const getRequests = async (walletAddress: string): Promise<Request[]> => {
       FROM requests r
       LEFT JOIN online o
         ON o.user_address = r.requester_address
-      WHERE r.created_at >= NOW() - INTERVAL '24 hours';
+      WHERE r.created_at >= NOW() - INTERVAL '24 hours'
+      ORDER BY r.created_at DESC;
     `
     results = await client.query(query, [walletAddress])
   } catch(error) {

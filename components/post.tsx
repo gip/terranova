@@ -19,8 +19,11 @@ export const Post = ({ done }: { done: () => void }) => {
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-center pt-4">
-        Request
+      <div className="flex justify-center pt-4 italic">
+        Who do you want to connect with ?
+      </div>
+      <div className="flex justify-center italic px-4 text-red-500">
+        This site is monitored by AI and inappropriate requests and actions may lead to permanent ban
       </div>
       <div className="px-4 py-3">
         <Textarea

@@ -3,6 +3,7 @@
 import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { useWorldAuth } from 'next-world-auth/react'
+import { Button } from '@/components/ui/button'
 import {
 //   ControlBar,
   GridLayout,
@@ -20,6 +21,7 @@ function Page() {
   const searchParams = useSearchParams()
   const id = searchParams.get('id')
   const [token, setToken] = useState(null)
+  const [roomID, setRoomID] = useState(null)
   const [roomInstance] = useState(() => new Room({
     // Optimize video quality for each participant's screen
     adaptiveStream: true,
@@ -29,7 +31,7 @@ function Page() {
 
   const endCall = async () => {
     await fetch('/api/call', {
-      method: 'DELETE',
+      method: 'PATCH',
       body: JSON.stringify({ id })
     })
     await roomInstance.disconnect()
@@ -43,6 +45,7 @@ function Page() {
         try {
           const r = await fetch(`/api/call?id=${id}`)
           const j = await r.json()
+          setRoomID(j.room_uuid)
           const resp = await fetch(`/api/token?room=${j.room_uuid}&username=${session.user.username}`);
           const data = await resp.json();
           if (!mounted) return;
@@ -98,7 +101,11 @@ function Page() {
         {/* <ControlBar /> */}
       </div>
     </RoomContext.Provider>
-    <button onClick={endCall}>End Call</button>
+    <div className="flex justify-center mt-4">
+      <Button onClick={endCall}>Leave</Button>
+      <Button variant="destructive" onClick={endCall}>Report</Button>
+    </div>
+    <div>{roomID}</div>
   </>);
 }
 

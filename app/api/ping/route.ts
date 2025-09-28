@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-world-auth'
 import { client } from '@/lib/db'
+import { Call } from '@/lib/types'
 
 // Do not cache endpoint result
 export const revalidate = 0
@@ -20,7 +21,7 @@ const ping = async (walletAddress: string, username?: string): Promise<void> => 
   }
 }
 
-const calls = async (walletAddress: string): Promise<void> => {
+const calls = async (walletAddress: string): Promise<Call[] | null> => {
   try {
     const query = `
       SELECT
@@ -38,11 +39,14 @@ const calls = async (walletAddress: string): Promise<void> => {
       JOIN online to_user
         ON to_user.user_address = c.taker_address
           AND to_user.ping_at >= NOW() - INTERVAL '10 seconds'   -- taker must be online
-      WHERE r.requester_address = $1;`
-    await client.query(query, [walletAddress])
+      WHERE r.requester_address = $1
+        AND c.end_at IS NULL;`
+    const r = await client.query(query, [walletAddress])
+    return r.rows
   } catch(error) {
     console.log('PNG', 'Query failed', error)
   }
+  return null
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars

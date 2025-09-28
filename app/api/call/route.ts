@@ -110,12 +110,15 @@ export const GET = async (req: Request) => {
         SELECT * FROM calls
         WHERE id = $1;
       `
-      const { rowCount } = await client.query<{ id: string }>(sql, [
+      const { rows } = await client.query<{ id: string }>(sql, [
         callId,
       ])
   
+      if(!rows[0]) {
+        return NextResponse.json({ error: 'unknown call' }, { status: 400 })
+      }
       return NextResponse.json(
-        { deleted: rowCount ?? 0 },
+        rows[0],
         { status: 200 }
       )
     } catch (error) {
@@ -123,3 +126,46 @@ export const GET = async (req: Request) => {
       return NextResponse.json({ error: 'GET failed' }, { status: 500 })
     }
 }
+
+// Add to app/api/requests/route.ts
+
+export const PATCH = async (req: Request) => {
+    const session = await getServerSession({})()
+    if (!session) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+  
+    let body: { id?: string; end_at?: string }
+    try {
+      body = await req.json()
+    } catch {
+      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 })
+    }
+  
+    const callId = body.id?.trim()
+    if (!callId) {
+      return NextResponse.json({ error: 'call id is required' }, { status: 400 })
+    }
+  
+    try {
+      const sql = `
+        UPDATE calls
+        SET end_at = NOW(),
+            modified_at = NOW()
+        WHERE id = $1
+        RETURNING *;
+      `
+      const { rows, rowCount } = await client.query<Call>(sql, [
+        callId,
+      ])
+  
+      if (rowCount === 0) {
+        return NextResponse.json({ error: 'Call not found or not owned by taker' }, { status: 404 })
+      }
+  
+      return NextResponse.json(rows[0], { status: 200 })
+    } catch (error) {
+      console.error('CALLS_PATCH_ERROR', error)
+      return NextResponse.json({ error: 'Update failed' }, { status: 500 })
+    }
+  }
