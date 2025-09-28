@@ -79,7 +79,7 @@ export default function Page() {
 
   useEffect(() => {
     if(!session || !session.user) {
-      setTab('messages')
+      setTab('home')
     }
   }, [session])
 
@@ -173,7 +173,7 @@ export default function Page() {
                 transition-transform duration-1000 ease-in-out
                 ${isTextVisible ? 'translate-y-0' : '-translate-y-full'}
               `}>
-                <p className="text-md italic text-center">Video Connect with Real Human</p>
+                <p className="text-md italic text-center">From real conversations to cryptocommunities and sharable knowledge: Terranova turns talk into maps, guides, and discoveries</p>
               </div>
             </div>
             <div className="flex flex-col gap-6 items-center w-full max-w-md">
