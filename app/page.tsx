@@ -74,8 +74,13 @@ export default function Page() {
       }
     }
     const interval = setInterval(f, 5000)
-    setTab('messages')
     return () => clearInterval(interval)
+  }, [session])
+
+  useEffect(() => {
+    if(!session || !session) {
+      setTab('home')
+    }
   }, [session])
 
   useEffect(() => {
