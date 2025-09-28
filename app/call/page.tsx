@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { useWorldAuth } from 'next-world-auth/react'
 import {
 //   ControlBar,
@@ -14,32 +15,35 @@ import { Room, Track } from 'livekit-client'
 // import { EgressClient } from 'livekit-server-sdk'
 import '@livekit/components-styles'
 
-// const generateRandomName = () => {
-//   const adjectives = ['quick', 'fast', 'smart', 'bright', 'cool', 'amazing', 'super', 'mega', 'ultra', 'epic'];
-//   const nouns = ['user', 'player', 'gamer', 'coder', 'dev', 'hero', 'star', 'champ', 'pro', 'master'];
-//   const randomAdjective = adjectives[Math.floor(Math.random() * adjectives.length)];
-//   const randomNoun = nouns[Math.floor(Math.random() * nouns.length)];
-//   const randomNumber = Math.floor(Math.random() * 1000);
-//   return `${randomAdjective}-${randomNoun}-${randomNumber}`;
-// };
-
-export default function Page() {
+function Page() {
   const { session } = useWorldAuth()
-  const room = 'quickstart-room'
+  const searchParams = useSearchParams()
+  const id = searchParams.get('id')
   const [token, setToken] = useState(null)
   const [roomInstance] = useState(() => new Room({
     // Optimize video quality for each participant's screen
     adaptiveStream: true,
     // Enable automatic audio/video quality optimization
     dynacast: true,
-  }));
+  }))
+
+  const endCall = async () => {
+    await fetch('/api/call', {
+      method: 'DELETE',
+      body: JSON.stringify({ id })
+    })
+    await roomInstance.disconnect()
+    window.location.href = '/'
+  }
 
   useEffect(() => {
     if(session && session.user) {
       let mounted = true;
       (async () => {
         try {
-          const resp = await fetch(`/api/token?room=${room}&username=${session.user.username}`);
+          const r = await fetch(`/api/call?id=${id}`)
+          const j = await r.json()
+          const resp = await fetch(`/api/token?room=${j.room_uuid}&username=${session.user.username}`);
           const data = await resp.json();
           if (!mounted) return;
           if (data.token) {
@@ -94,9 +98,7 @@ export default function Page() {
         {/* <ControlBar /> */}
       </div>
     </RoomContext.Provider>
-    <button onClick={() => {
-      roomInstance.disconnect()
-      window.location.href = '/'} }>End Call</button>
+    <button onClick={endCall}>End Call</button>
   </>);
 }
 
@@ -117,4 +119,10 @@ function MyVideoConference() {
       <ParticipantTile />
     </GridLayout>
   );
+}
+
+export default function Top() {
+  return (
+    <Suspense><Page /></Suspense>
+  )
 }

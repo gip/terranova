@@ -1,15 +1,23 @@
 'use client'
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useWorldAuth } from 'next-world-auth/react'
 import { Permission } from '@worldcoin/minikit-js'
-import GoogleMapReact from 'google-map-react'
+// import GoogleMapReact from 'google-map-react'
 
 import { Button } from '@/components/ui/button'
-import { Home, DollarSign, MessageSquare } from "lucide-react"
-
-
-const mapsApiKey: string = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!
+import { Home, Plus, MessageSquare } from "lucide-react"
+import { Feed } from '@/components/feed'
+import { Post } from '@/components/post'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 
 const BottomNav = ({ tab, setTab }: { tab: string, setTab: (tab: string) => void }) => {
   return (
@@ -28,10 +36,16 @@ const BottomNav = ({ tab, setTab }: { tab: string, setTab: (tab: string) => void
           <MessageSquare className="w-10 h-10" />
         </button>
         <button 
-          onClick={() => setTab('payments')} 
-          className={`${tab === 'payments' ? 'text-[#8b5cf6]' : 'text-gray-500'}`}
+          onClick={() => setTab('post')} 
+          className={`${tab === 'post' ? 'text-[#8b5cf6]' : 'text-gray-500'}`}
         >
-          <DollarSign className="w-10 h-10" />
+          <Plus className="w-10 h-10" />
+        </button>
+        <button 
+          onClick={() => setTab('ai')} 
+          className={`${tab === 'ai' ? 'text-[#8b5cf6]' : 'text-gray-500'}`}
+        >
+          <div className="text-4xl">AI</div>
         </button>
       </nav>
     </div>
@@ -39,21 +53,68 @@ const BottomNav = ({ tab, setTab }: { tab: string, setTab: (tab: string) => void
 }
 
 export default function Page() {
-  const { session, signInWallet, signOut: signOut0, getLocation, minikit } = useWorldAuth()
+  const { session, signInWallet, signOut: signOut0, minikit } = useWorldAuth()
   const [, setPermissions] = useState([])
   const [tab, setTab] = useState('home')
+  const [posts, setPost] = useState([])
+  const [showModal, setShowModal] = useState(false)
+  const [modalContent, setModalContent] = useState<{ id?: string, taker_name?: string }>({})
 
-  // const tip = async (amount: number) => {
-  //   const r = await pay({ amount, token: Tokens.WLD, recipient: '0x2Eb67DdFf6761bC0938e670bf1e1ed46110DDABb' })
-  //   if(r.success) {
-  //     setTipAmount(amount)
-  //   }
-  // }
+
+  const fetchPosts = async () => {
+    const res = await fetch('/api/feed')
+    const data = await res.json()
+    setPost(data)
+  }
+
+  useEffect(() => {
+    const f = async () => {
+      if(session && session.user.walletAddress) {
+        await fetchPosts()
+      }
+    }
+    const interval = setInterval(f, 5000)
+    setTab('messages')
+    return () => clearInterval(interval)
+  }, [session])
+
+  useEffect(() => {
+    const f = async () => {
+      if(session && session.isOrbVerified && session.user.walletAddress) {
+        const result = await fetch('/api/ping')
+        const json = await result.json()
+        if(json.results && json.results[0]) {
+          const call = json.results[0]
+          setModalContent(call)
+          setShowModal(true)
+        }
+      }
+    }
+    
+    const interval = setInterval(f, 5000)
+    return () => clearInterval(interval)
+  }, [session])
+
+  const handleModalClose = async (accept: boolean) => {
+    setShowModal(false)
+    if(accept) {
+      window.location.href = `/call?id=${modalContent.id}`
+    } else {
+        await fetch('/api/call', {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ id: modalContent.id }),
+        })
+    }
+  }
 
   const signOut = async () => {
     await signOut0()
     setTab('home')
   }
+
 
   const signIn = async () => {
     const signInResult = await signInWallet()
@@ -92,8 +153,8 @@ export default function Page() {
             <p className="text-2xl italic py-6">USDC ${null || '0.00'}</p>
           </div>
         </>}
-        {/* {tab === 'post' && post&& <Post post={post} setPost={async () => { setPost(null); await fetchPosts(); setTab('messages') }} />}
-        {tab === 'messages' && <Feed posts={posts} setPost={(post) => { setPost(post); setTab('post') }} />} */}
+        {tab === 'post' && posts && <Post done={() => { fetchPosts(); setTab('messages') } } />}
+        {tab === 'messages' && <Feed posts={posts} setPost={() => { setTab('post') }} />}
         {tab === 'home' && (
           <div className="flex flex-col items-center justify-center h-full mt-2">
             <h1 className="text-2xl italic py-6">Terranova</h1>
@@ -107,8 +168,7 @@ export default function Page() {
                 transition-transform duration-1000 ease-in-out
                 ${isTextVisible ? 'translate-y-0' : '-translate-y-full'}
               `}>
-                <p className="text-md italic text-center">Share your knowledge with the world</p>
-                <p className="text-md italic py-6 text-center">Be part of a new economic chain</p>
+                <p className="text-md italic text-center">Video Connect with Real Human</p>
               </div>
             </div>
             <div className="flex flex-col gap-6 items-center w-full max-w-md">
@@ -133,7 +193,7 @@ export default function Page() {
               </>)}
               {session?.user && session?.isOrbVerified && (<>
                 {session?.user?.username && (<p className="text-md italic text-center mt-2">Welcome @{session?.user?.username}</p>)}
-                <div className="flex flex-col items-center w-full">
+                {/* <div className="flex flex-col items-center w-full">
                   <Button
                     className={`text-3xl rounded-full px-6 py-8 w-4/5 ${!session.user ? 'border-2 border-yellow-500' : (session.extra.location ? 'cursor-not-allowed border-2 border-green-500' : 'border-2 border-white')}`}
                     onClick={getLocation}
@@ -156,11 +216,8 @@ export default function Page() {
                       >
                       </GoogleMapReact>
                     </div>}
-                  {/* {location && !location.success && (
-                    <p className="text-md italic text-center mt-4">Could not get location</p>
-                  )} */}
-                </div>
-                {session?.user && location && (<>
+                </div> */}
+                {session?.user && (<>
                   <Button
                     className="text-6xl font-bold rounded-full mt-2 w-32 h-32 bg-green-500 hover:bg-green-600 transition-colors"
                     onClick={() => setTab('messages')}
@@ -168,8 +225,7 @@ export default function Page() {
                     GO
                   </Button>
                   <Button onClick={signOut}>Sign Out</Button>
-                  <Button onClick={() => window.location.href = '/call'}>Call</Button>
-                  <p className="text-md text-center mt-2">You are all set!<br />Press GO to start sharing your knowledge</p>
+                  <p className="text-md text-center mt-2">You are all set!<br />Press GO to start</p>
                 </>)}
               </>)}
 
@@ -182,5 +238,33 @@ export default function Page() {
         <BottomNav tab={tab} setTab={setTab} />
       </div>}
     </div>
+    <AlertDialog open={showModal} onOpenChange={setShowModal}>
+        <AlertDialogContent className="bg-black border-2 border-[#1c1c1f] max-w-[90%] rounded-xl">
+          <AlertDialogHeader className="space-y-3">
+            <AlertDialogTitle className={`text-2xl font-bold text-center ${
+              true ? 'text-green-500' : 'text-red-500'
+            }`}>
+              Call Incoming
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-lg text-center text-gray-300">
+              From {modalContent && modalContent.taker_name}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="sm:justify-center">
+            <AlertDialogAction 
+              onClick={() => handleModalClose(true)}
+              className="text-xl rounded-full my-4 px-6 py-4 w-full sm:w-2/3 border-2 border-[#8b5cf6] bg-transparent hover:bg-[#8b5cf6]/20 transition-colors"
+            >
+              OK
+            </AlertDialogAction>
+            <AlertDialogAction 
+              onClick={() => handleModalClose(false)}
+              className="text-xl rounded-full my-4 px-6 py-4 w-full sm:w-2/3 border-2 border-[#8b5cf6] bg-transparent hover:bg-[#8b5cf6]/20 transition-colors"
+            >
+              DECLINE
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
   </>)
 }
