@@ -1,8 +1,6 @@
 'use client'
 
 import { useState } from "react"
-import Image from "next/image"
-import { Tokens } from 'next-world-auth'
 import { useWorldAuth } from 'next-world-auth/react'
 import { Permission } from '@worldcoin/minikit-js'
 import GoogleMapReact from 'google-map-react'
@@ -41,7 +39,7 @@ const BottomNav = ({ tab, setTab }: { tab: string, setTab: (tab: string) => void
 }
 
 export default function Page() {
-  const { isLoading, isAuthenticated, session, signInWallet, signOut: signOut0, getLocation, pay, minikit } = useWorldAuth()
+  const { session, signInWallet, signOut: signOut0, getLocation, minikit } = useWorldAuth()
   const [, setPermissions] = useState([])
   const [tab, setTab] = useState('home')
 
@@ -90,6 +88,7 @@ export default function Page() {
         {tab === 'payments' && <>
           <div className="flex flex-col items-center justify-center h-full mt-10">
             <p className="text-2xl py-6">Amount to be paid</p>
+            {/* @ts-expect-error - null || '0.00' is intentionally falsy for placeholder */}
             <p className="text-2xl italic py-6">USDC ${null || '0.00'}</p>
           </div>
         </>}
