@@ -7,24 +7,60 @@ import { useWorldAuth } from 'next-world-auth/react'
 import { Permission } from '@worldcoin/minikit-js'
 import GoogleMapReact from 'google-map-react'
 
-// const AnyReactComponent = ({ text }: { text: string }) => <div>{text}</div>
+import { Button } from '@/components/ui/button'
+import { Home, DollarSign, MessageSquare } from "lucide-react"
+
 
 const mapsApiKey: string = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!
 
-export default function Home() {
-  const { isLoading, isAuthenticated, session, signInWorldID, signInWallet, signOut, getLocation, pay, minikit } = useWorldAuth()
-  const [tipAmount, setTipAmount] = useState<number | null>(null)
-  const [, setPermissions] = useState([])
+const BottomNav = ({ tab, setTab }: { tab: string, setTab: (tab: string) => void }) => {
+  return (
+    <div className="fixed bottom-0 left-0 right-0 flex justify-center pb-12">
+      <nav className="bg-[#1c1c1f] rounded-full px-6 py-3 flex items-center gap-8 shadow-lg">
+        <button 
+          onClick={() => setTab('home')} 
+          className={`${tab === 'home' ? 'text-[#8b5cf6]' : 'text-gray-500'}`}
+        >
+          <Home className="w-12 h-12" />
+        </button>
+        <button 
+          onClick={() => setTab('messages')} 
+          className={`${tab === 'messages' ? 'text-[#8b5cf6]' : 'text-gray-500'}`}
+        >
+          <MessageSquare className="w-10 h-10" />
+        </button>
+        <button 
+          onClick={() => setTab('payments')} 
+          className={`${tab === 'payments' ? 'text-[#8b5cf6]' : 'text-gray-500'}`}
+        >
+          <DollarSign className="w-10 h-10" />
+        </button>
+      </nav>
+    </div>
+  )
+}
 
-  const tip = async (amount: number) => {
-    const r = await pay({ amount, token: Tokens.WLD, recipient: '0x2Eb67DdFf6761bC0938e670bf1e1ed46110DDABb' })
-    if(r.success) {
-      setTipAmount(amount)
-    }
+export default function Page() {
+  const { isLoading, isAuthenticated, session, signInWallet, signOut: signOut0, getLocation, pay, minikit } = useWorldAuth()
+  const [, setPermissions] = useState([])
+  const [tab, setTab] = useState('home')
+
+  // const tip = async (amount: number) => {
+  //   const r = await pay({ amount, token: Tokens.WLD, recipient: '0x2Eb67DdFf6761bC0938e670bf1e1ed46110DDABb' })
+  //   if(r.success) {
+  //     setTipAmount(amount)
+  //   }
+  // }
+
+  const signOut = async () => {
+    await signOut0()
+    setTab('home')
   }
 
-  const goWallet = async () => {
-    await signInWallet()
+  const signIn = async () => {
+    const signInResult = await signInWallet()
+    if(!signInResult) return;
+  
     // @ts-expect-error - minikit instance from hook may not have commandsAsync property in type definition
     const { finalPayload } = await minikit!.commandsAsync.getPermissions()
     const permissions = finalPayload.permissions
@@ -33,10 +69,10 @@ export default function Home() {
       // @ts-expect-error - minikit instance from hook may not have commandsAsync property in type definition
       await minikit.commandsAsync.requestPermission({ permission: Permission.Microphone })
     }
-    if(!permissions.Notifications) {
-      // @ts-expect-error - minikit instance from hook may not have commandsAsync property in type definition
-      await minikit.commandsAsync.requestPermission({ permission: Permission.Notifications })
-    }
+    // if(!permissions.Notifications) {
+    //   // @ts-expect-error - minikit instance from hook may not have commandsAsync property in type definition
+    //   await minikit.commandsAsync.requestPermission({ permission: Permission.Notifications })
+    // }
     // @ts-expect-error - minikit instance from hook may not have commandsAsync property in type definition
     const { finalPayload: finalPayload1 } = await minikit!.commandsAsync.getPermissions()
     const permissions1 = finalPayload1.permissions
@@ -46,141 +82,106 @@ export default function Home() {
     await minikit.commandsAsync.sendHapticFeedback({ hapticsType: 'notification', style: 'success' })
   }
 
-  const isInstalled = true
-
+  const isTextVisible = !session?.user
 
   return (<>
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 sm:p-20 font-[family-name:var(--font-geist-sans)] text-center">
-      <main className="flex flex-col gap-1 row-start-2 items-center">
-        <div className="text-2xl font-bold">Terranova</div>
-        {isLoading ? (
-          <div className="flex items-center justify-center mt-4">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 dark:border-white"></div>
+     <div className="min-h-screen flex flex-col pt-2">
+      <main className="flex-1 pb-16">
+        {tab === 'payments' && <>
+          <div className="flex flex-col items-center justify-center h-full mt-10">
+            <p className="text-2xl py-6">Amount to be paid</p>
+            <p className="text-2xl italic py-6">USDC ${null || '0.00'}</p>
           </div>
-        ) : (
-          <>
-            {!isInstalled && <>
-              <div>This app is designed to be run on <a href="https://worldcoin.org/mini-app?app_id=app_a963cd2077f59caf1146198685eed59a&draft_id=meta_4d75d4955b27044f4ef562e60ad09d17" target="_blank" rel="noopener noreferrer">World App</a></div>
-              <Image src="/miniappqr.png" alt="Mini App QR Code" width={400} height={400} />
-              <hr style={{ width: "100px", margin: 10 }} />
-              {session && session.isAuthenticatedWorldID && <>
-                <div>You have authenticated with <span className="underline">World ID</span></div>
-                <div>Your unique app ID is available</div>
-                <div>Orb Verification Status: <span className="font-bold">{session.isOrbVerified ? 'verified ✓' : 'not verified ✗'}</span></div>
-                <button
-                    className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-                    onClick={signOut}
-                  >
-                    Logout
-                  </button>
-              </>}
-              {!(session && session.isAuthenticatedWorldID) && <>
-                <div>In a web context, it is however possible to sign in with World ID</div>
-                <div>You will need the <a href="https://worldcoin.org/world-app" target="_blank" rel="noopener noreferrer">World App</a> to sign in with World ID</div>
-                <button
-                  className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-                  onClick={() => signInWorldID({})}
+        </>}
+        {/* {tab === 'post' && post&& <Post post={post} setPost={async () => { setPost(null); await fetchPosts(); setTab('messages') }} />}
+        {tab === 'messages' && <Feed posts={posts} setPost={(post) => { setPost(post); setTab('post') }} />} */}
+        {tab === 'home' && (
+          <div className="flex flex-col items-center justify-center h-full mt-2">
+            <h1 className="text-2xl italic py-6">Terranova</h1>
+            <div
+              className={`
+                overflow-hidden transition-[height,transform] duration-1000 ease-in-out
+                ${isTextVisible ? 'h-[120px]' : 'h-0'}
+              `}
+            >
+              <div className={`
+                transition-transform duration-1000 ease-in-out
+                ${isTextVisible ? 'translate-y-0' : '-translate-y-full'}
+              `}>
+                <p className="text-md italic text-center">Share your knowledge with the world</p>
+                <p className="text-md italic py-6 text-center">Be part of a new economic chain</p>
+              </div>
+            </div>
+            <div className="flex flex-col gap-6 items-center w-full max-w-md">
+              <div className="flex flex-col items-center w-full">
+                <Button
+                  className={`text-3xl rounded-full px-6 py-8 w-4/5 ${session?.user ? 'opacity-50 cursor-not-allowed border-2 border-green-500' : 'border-2 border-white'}`}
+                  onClick={signIn}
+                  disabled={!!session?.user}
                 >
-                  Sign in with World ID
-                </button>
-              </>}
-            </>}
-            {isInstalled && (isAuthenticated && session ? (
-              <>
-                <hr style={{ width: "100px", margin: 10 }} />
-                <div>You are logged in!</div>
-                <div className="flex gap-1 items-center flex-col sm:flex-row">
-                  <button
-                    className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-                    onClick={signOut}
-                  >
-                    Logout
-                  </button>
-                  <hr style={{ width: "100px", margin: 10 }} />
-                  {session.isAuthenticatedWallet && <>
-                    <div>You have authenticated with <span className="underline">World Wallet</span></div>
-                    <div>Welcome <b>{session?.user?.username}</b>!</div>
-                    <div>Your wallet address is: <span className="text-xs"><b>{session?.user?.walletAddress}</b></span></div>
-                    <button
-                      className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-                      onClick={() => tip(0.1)}
-                    >
-                      Tip the developer 0.1 WLD
-                    </button>
-                    <button
-                      className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-                      onClick={() => tip(1.0)}
-                    >
-                      Tip the developer 1.0 WLD
-                    </button>
-                    {tipAmount && <div className="text-green-500 italic">Thanks for tipping the developer {tipAmount} WLD</div>}
-                  </>}
-                  {!session.isAuthenticatedWallet && <button
-                    className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-                    onClick={signInWallet}
-                  >
-                    Sign in with World Wallet
-                  </button>}
-                  <hr style={{ width: "100px", margin: 10 }} />
-                  {session.isAuthenticatedWorldID && <>
-                    <div>You have authenticated with <span className="underline">World ID</span></div>
-                    <div>Your unique app ID is available</div>
-                    <div>Orb Verification Status: <span className="font-bold">{session.isOrbVerified ? 'verified ✓' : 'not verified ✗'}</span></div>
-                  </>}
-                  <div>
-                  Your location is: {
-                    session?.extra?.location
-                      ? (<>
-                          <div>latitude: {session.extra.location.latitude}</div>
-                          <div>longitude: {session.extra.location.longitude}</div>
-                        </>)
-                      : 'unknown'
-                    }
-                  </div>
-                  <button
-                    className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
+                  <span className={session?.user ? 'text-green-500' : ''}>
+                    {session?.user ? '✅ ' : ''}Sign in
+                  </span>
+                </Button>
+                {!session?.user && (
+                  <p className="text-md italic text-center mt-2">To get started, sign in with your wallet</p>
+                )}
+              </div>
+
+              {session?.user && !session?.isOrbVerified && (<>
+                <p className="text-md italic text-center mt-2 text-red-500">This app is for verified humans</p>
+                <p className="text-md italic text-center mt-2">Please find an Orb to confirm your humanity</p>
+              </>)}
+              {session?.user && session?.isOrbVerified && (<>
+                {session?.user?.username && (<p className="text-md italic text-center mt-2">Welcome @{session?.user?.username}</p>)}
+                <div className="flex flex-col items-center w-full">
+                  <Button
+                    className={`text-3xl rounded-full px-6 py-8 w-4/5 ${!session.user ? 'border-2 border-yellow-500' : (session.extra.location ? 'cursor-not-allowed border-2 border-green-500' : 'border-2 border-white')}`}
                     onClick={getLocation}
+                    disabled={false}
                   >
-                    {session?.extra?.location ? 'Update Location' : 'Get Location'}
-                  </button>
+                    <span className={session?.user ? (!session.extra.location ? 'text-yellow-500' : 'text-green-500') : ''}>
+                      {!session.extra.location && 'Share location'}
+                      {session.extra.location && (!session?.extra.location ? '🟡 ' : '✅ ') + 'Update location'}
+                    </span>
+                  </Button>
+                  {!session?.extra?.location && (
+                    <p className="text-md italic text-center mt-2">Share your location to act as a local expert</p>
+                  )}
                   {session?.extra.location &&
-                    <div style={{ height: '10vh', width: '100%' }}>
+                    <div className="my-8" style={{ height: '15vh', width: '90%' }}>
                       <GoogleMapReact
                         bootstrapURLKeys={{ key: mapsApiKey }}
                         defaultCenter={{ lat: session.extra.location.latitude!, lng: session.extra.location.longitude! }}
                         defaultZoom={11}
                       >
-                        {/* <AnyReactComponent
-                          lat={session.extra.location.latitude}
-                          lng={session.extra.location.longitude}
-                          text="My Marker"
-                        /> */}
                       </GoogleMapReact>
                     </div>}
-                    <button
-                      className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-                      onClick={() =>  window.location.href = '/call'}
-                    >
-                      Call
-                  </button>
-                  </div>
-              </>
-            ) : (
-              <>
-              <hr style={{ width: "100px", margin: 10 }} />
-                <div className="flex gap-4 items-center flex-col sm:flex-row">
-                  <button
-                    className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-                    onClick={goWallet}
-                  >
-                    Login with World Wallet
-                  </button>
+                  {/* {location && !location.success && (
+                    <p className="text-md italic text-center mt-4">Could not get location</p>
+                  )} */}
                 </div>
-              </>
-            ))}
-          </>
+                {session?.user && location && (<>
+                  <Button
+                    className="text-6xl font-bold rounded-full mt-2 w-32 h-32 bg-green-500 hover:bg-green-600 transition-colors"
+                    onClick={() => setTab('messages')}
+                  >
+                    GO
+                  </Button>
+                  <Button onClick={signOut}>Sign Out</Button>
+                  <Button onClick={() => window.location.href = '/call'}>Call</Button>
+                  <p className="text-md text-center mt-2">You are all set!<br />Press GO to start sharing your knowledge</p>
+                </>)}
+              </>)}
+
+            </div>
+          </div>
         )}
       </main>
+      {session && session.user && <div className={`fixed bottom-0 w-full transition-all duration-700 ease-in-out ${
+        session?.user && location ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-full'}`} >
+        <BottomNav tab={tab} setTab={setTab} />
+      </div>}
     </div>
   </>)
 }
