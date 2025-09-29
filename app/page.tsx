@@ -151,13 +151,6 @@ export default function Page() {
   return (<>
      <div className="min-h-screen flex flex-col pt-2">
       <main className="flex-1 pb-16">
-        {tab === 'payments' && <>
-          <div className="flex flex-col items-center justify-center h-full mt-10">
-            <p className="text-2xl py-6">Amount to be paid</p>
-            {/* @ts-expect-error - null || '0.00' is intentionally falsy for placeholder */}
-            <p className="text-2xl italic py-6">USDC ${null || '0.00'}</p>
-          </div>
-        </>}
         {tab === 'post' && posts && <Post done={() => { fetchPosts(); setTab('messages') } } />}
         {tab === 'messages' && <Feed posts={posts} setPost={() => fetchPosts()} />}
         {tab === 'home' && (
